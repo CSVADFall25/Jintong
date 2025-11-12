@@ -1,149 +1,86 @@
 ## Introduction
 
-Our Garden is data visualization collage and tool for long-distance relationship to see how facing online and offline shaping this relationship's homestatis in the digital era. It records the facing time online of me and my boyfriend for almost two years as a form of collage dairy ,and allow me to keep updating the data to continue create the work.
+***Our Garden*** is a data-visualization tool for creating personalized collage diaries using data-generated patterns. It is based on my long-distance relationship with my boyfriend and visualizes our video-calling and location data from July 2025 to today.
 
+The tool generates flower patterns and other elements from a selected date range, recording our online “facing time” as growing visual forms. It also allows custom drag-and-drop collage making, turning data into a dynamic diary.
+
+I used Copilot to help organize and generate some of the code.
 
 ## Inspiration
-Doing collage is my way of writing dairies as a person who love to keep records of things happened every day. Since last year I met my boyfriend and we are keeping apart to different time zones due to different life track. Thanks to internet who joint us connections and made us feel like more intimate by seeing each other everyday online, I noticed that the increasing facing time online makes the missing data of it as it is not like text messages thta can be stored. All it presents are just the duration and time. Can it mean somethings to how our relationship grows? And can the visualization help us reallocate our personal time with time zones?
+Collage has always been my way of keeping diaries. I like recording everyday details through fragments and textures.
 
-An app called Forest inpired me. As a tool for concentration, it changes simple accumulated concentration time to different kinds of trees and to forest as an incentive mechanism. For long-distance relationships, it is about communication, trust,  and respect to each other's time.
-A coloring book called *Serect Garden" also provide me with inpiration. It 
+Since last year, my boyfriend and I have lived in different places or time zones. Thanks to the internet, we’ve managed to see each other every day online. But unlike text messages, video calls leave no stored record, only duration and time.
+
+The app [Forest](https://www.forestapp.cc/) inspired me. It turns focused time into trees and forests as an incentive mechanism. For relationships, communication, trust, and respect for each other’s time play a similar role.
+
+I also took a few images as aesthetic references for color, softness, and paper-collage texture.
+
+<img src="https://i.pinimg.com/originals/b5/64/86/b5648682b9a5a7236c641047576e4a60.jpg" width="300"> <img src="https://pbs.twimg.com/media/GT8n2RnXIAAcMoH?format=jpg&name=900x900" width=300>
 
 ## Data Collecting and Orgnization
-I began by extracting our video facing time
+I manually extracted our video-call data from WeChat, including:
 
-I predict some of the mood by scanning through the text content of the video call
+- date
+- time of day
+- call duration and ending time
+- initiator (who called first)
+- locations (city, latitude, longitude)
+- mood during the call
+- brief notes recording small shared memories
 
-The manul data orgnazation process is also a rememorize process
+When memories were unclear, I predicted mood and notes by scanning text or recalling impressions.
 
+Eight moods were used: happiness, calm, intimacy, care, longing, anxiety, anger, and sadness.
+If the mood was uncertain, I marked it as missing.
 
+Originally, I planned to extract data from January 2024 when our relationship began, but manual extraction was too time-consuming, so I used a five-month dataset (July-November) as a test and limited visualization to a two-month range for clarity.
 
+## Design and Composite
+I started by defining the visual flow and color system. The style is simple yet warm, with added paper texture for an organic collage look.
 
-Our Garden 🌿
+The first UI panel allows selecting a date range (max 2 months) to generate flowers. Each flower contains five days of data:
 
-A personal data–visualization collage and time-based relationship archive
+- Petal size → call duration (longer = larger)
 
-Overview
+- Petal color → mood
 
-Our Garden is a generative visualization and ongoing personal recording tool that transforms the daily video-call duration between two people in a long-distance relationship into an evolving digital ecosystem. Instead of representing communication as static metrics, the project uses time, rhythm, and absence as “nutrients” that grow and shape an organic garden—visualizing how a relationship sustains homeostasis across physical distance and mismatched time zones.
+- Mood colors:
+    
+    - happiness – gold
+    - intimacy – pink
+    - care – green
+    - calm – light blue
+    - longing – blue
+    - sadness – gray
+    - anxiety – orange
+    - anger – red
+    - missing – opaque white
+    
+Hovering over a petal displays detailed video-call information.
 
-This project is continuously updated: as new call data are logged, the garden grows new forms, changes density, and gradually reveals the temporal patterns that accumulate through everyday presence.
+The second UI panel generates other elements:
 
-Conceptual Motivation
+- Selecting “initiator” creates flower stems and leaves—black leaves for his calls, green leaves for mine.
 
-Long-distance relationships depend on a delicate balance: attention, communication, trust, and accommodation across different schedules and geographic separation. Although digital platforms make constant connection possible, they also produce a paradox—the more we face each other online, the fewer material traces remain.
+- Hovering on the flower’s heart shows total duration and the number of calls from each side.
 
-Text messages leave archives. Video calls do not.
-No transcripts, no saved conversations—just time.
-Duration becomes the only residue.
+- Selecting “time of day” generates a sun, with rays representing call periods:
 
-This absence is meaningful. In contemporary digital life, we often measure ourselves through data, yet the most emotionally important interactions generate the least recordable traces. Inspired by ideas from data humanism (Giorgia Lupi), relational homeostasis, and temporal ecology, Our Garden treats time as both data and metaphor:
+    - morning – white
+    - noon – orange
+    - afternoon – yellow
+    - evening – blue
+    - night – black
 
-Time spent → nutrients
+    Ray length corresponds to call duration. Hovering on the sun shows the total number of calls for each time period.
 
-Gaps / silence → soil dryness, rough petals
+- I also considered adding rain or clouds based on other variables but ran out of time.
 
-Night calls vs day calls → different bloom intensities
+The third UI panel lets users add text on the canvas and clear or save the collage.
 
-Weeks → flowering cycles
+## Limitations and Future Development
+- The date range and flower rendering can be refined.
 
-By visualizing only what survives (time), the garden foregrounds what disappears (content).
-The visualization becomes a diary not of words, but of presence.
+- Currently it only reads my data; in the future it could accept any uploaded dataset.
 
-Inspiration
-
-This project is rooted in my personal habit of documenting life through collage. Collage preserves fragments—textures, arrangements, small pieces of everyday life. When I entered a long-distance relationship spanning two time zones (UTC-8 and UTC+8), collage became a metaphor for how our relationship itself assembles across discontinuous time blocks.
-
-A focus app called Forest also inspired me. It turns concentration time into growing trees. But while Forest treats time as reward, Our Garden treats time as memory**—**a soft infrastructure that holds our relationship together.
-
-Data Model & Pipeline
-
-The project engages the full data–visualization pipeline:
-
-1. Data Acquisition
-
-Call records are manually logged through a custom form, including:
-
-date
-
-duration_min
-
-day_time_self (morning/noon/night)
-
-num_calls
-
-initiator (me/him)
-
-mood (optional: missing, calm, happiness, longing, anger)
-
-location_self / location_other
-
-latitude/longitude (optional)
-
-2. Cleaning & Aggregation
-
-Daily records → weekly aggregates:
-
-weekly total minutes
-
-active days
-
-night-day ratio
-
-longest silent gap
-
-facing rhythm
-
-3. Visual Encoding
-
-Each week = a flower:
-
-flower radius → weekly total duration
-
-petal count → active days
-
-glow ratio → night-call intensity
-
-roughness → silent gaps
-
-color → mood distribution (optional)
-
-Daily records → nutrient particles drifting along the garden’s river path.
-
-Interaction
-
-Hover a flower → see its weekly summary
-
-Zoom/pan → explore different “seasons”
-
-Filter → show night calls / long calls / missing calls
-
-Live updating → garden grows as new data is added
-
-Tech Stack
-
-p5.js for generative drawing
-
-CSV data source
-
-Optional integration with Google Sheets for continuous updates
-
-Why a Garden?
-
-Because relationships are ecosystems.
-They grow, fluctuate, adapt, and sometimes go dormant.
-Because distance is not an absence—it is a condition for cultivation.
-Because duration is the only measurable trace that remains.
-
-In long-distance communication, time is not a metric;
-It is a gift, a resource, a rhythm, and part of the emotional climate.
-
-Future Work
-
-Integrate a timeline scrubber
-
-Add geographic mapping layers
-
-Introduce sound synthesis based on duration rhythms
-
-Export seasonal “garden posters”
+- The UX could improve—changing colors, size, or rotation; adding more generative elements; and exporting both the collage and its underlying data together.
