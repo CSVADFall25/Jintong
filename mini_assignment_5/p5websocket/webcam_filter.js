@@ -1,3 +1,5 @@
+// Brenna Scholte and Jintong Yang created this code together
+
 // Create WebSocket connection.
 const socket = new WebSocket('ws://localhost:8765');
 
