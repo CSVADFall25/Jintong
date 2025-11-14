@@ -7,20 +7,21 @@
   <title>Our Garden</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Comfortaa:wght@700&family=Indie+Flower&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
     <style>
       body { margin: 0; font-family: Arial, sans-serif; }
   #main-container { display: flex; flex-direction: row; height: 100vh; align-items: flex-start; }
-  #ui-panel { width: 340px; min-width: 320px; background: #f8f8f8; padding: 16px; display: flex; flex-direction: column; gap: 12px; height: auto; box-sizing: border-box; align-items: center; }
+  #ui-panel { width: 340px; min-width: 320px; background: #f8f8f8; padding: 16px; display: flex; flex-direction: column; gap: 18px; height: auto; box-sizing: border-box; align-items: center; margin-top: -10px; }
   .panel { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #eee; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; width: 100%; max-width: 300px; }
+      .panel:first-of-type { margin-top: -20px; }
       .panel-title { font-size: 16px; font-weight: bold; margin-bottom: 4px; text-align: center; }
       .main-title {
-        font-size: 48px;
+        font-size: 63px;
         font-family: "Indie Flower", cursive;
         font-weight: 400;
         font-style: normal;
-        margin-bottom: 12px;
+        margin-bottom: 0px;
         text-align: center;
         letter-spacing: 2px;
         color: #4a6c4a;
@@ -37,7 +38,7 @@
   width: 1125px;
   height: 750px;
   box-sizing: border-box;
-  margin-left: 20px;
+    margin-left: 28px;
         display: block;
   position: relative;
       }
@@ -64,13 +65,11 @@
           <select id="header-select"></select>
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <button id="generate-stem">Generate Stem</button>
-            <button id="generate-rain">Generate Rain</button>
             <button id="generate-sun">Generate Sun</button>
             <button id="generate-cloud">Generate Cloud</button>
           </div>
         </div>
         <div class="panel" id="panel-actions">
-          <!-- Title removed per request -->
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button id="add-text-btn">Add Text</button>
             <button id="clear-btn">Clear</button>
@@ -83,7 +82,7 @@
       </div>
     </div>
     <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
+    
     <script src="ui.js"></script>
     <script src="sketch.js"></script>
   </body>

@@ -7,6 +7,7 @@ function setupUI() {
   const headerSelect = document.getElementById('header-select');
   const genSunBtn = document.getElementById('generate-sun');
   const genStemBtn = document.getElementById('generate-stem');
+  const genCloudBtn = document.getElementById('generate-cloud');
 
   // Ensure data is loaded before initializing.
   // BUG FIX: top-level `let callsTable` in sketch.js is NOT on window, so `window.callsTable` was undefined.
@@ -69,9 +70,7 @@ function setupUI() {
     headerSelect.innerHTML = '';
     const options = [
       { label: 'Time of day', value: 'day_time_self' },
-      { label: 'Call duration (min)', value: 'duration_min' },
       { label: 'Initiator', value: 'initiator' },
-      { label: 'Mood', value: 'mood' },
       { label: 'Time difference (hours)', value: 'time_difference_hours' },
     ];
     for (const opt of options) {
@@ -86,28 +85,29 @@ function setupUI() {
   // Enable Sun generation only when category is day_time_self
   function refreshButtonsByCategory() {
     const cat = headerSelect ? headerSelect.value : '';
-    const rainBtn = document.getElementById('generate-rain');
     const cloudBtn = document.getElementById('generate-cloud');
+    // default all disabled states first
+    if (genSunBtn) { genSunBtn.disabled = true; genSunBtn.title = ''; }
+    if (genStemBtn) { genStemBtn.disabled = true; genStemBtn.title = ''; }
+    if (cloudBtn) { cloudBtn.disabled = true; cloudBtn.title = ''; }
     // Sun gating
-    if (genSunBtn) {
-      genSunBtn.disabled = cat !== 'day_time_self';
-      genSunBtn.title = cat !== 'day_time_self' ? 'Select "Time of day" to enable Sun' : '';
-    }
-    // Stem gating
-    if (genStemBtn) {
-      genStemBtn.disabled = cat !== 'initiator';
-      genStemBtn.title = cat !== 'initiator' ? 'Select "Initiator" to enable Stem' : '';
-    }
-    // Disable all other generation buttons when a special category is chosen
-    const timeOfDayMode = cat === 'day_time_self';
-    const initiatorMode = cat === 'initiator';
-    if (rainBtn) {
-      rainBtn.disabled = timeOfDayMode || initiatorMode;
-      rainBtn.title = (timeOfDayMode||initiatorMode) ? 'Disabled for current category' : '';
-    }
-    if (cloudBtn) {
-      cloudBtn.disabled = timeOfDayMode || initiatorMode;
-      cloudBtn.title = (timeOfDayMode||initiatorMode) ? 'Disabled for current category' : '';
+    if (cat === 'day_time_self') {
+      if (genSunBtn) { genSunBtn.disabled = false; genSunBtn.title = ''; }
+      if (genStemBtn) { genStemBtn.disabled = true; genStemBtn.title = 'Disabled for current category'; }
+      if (cloudBtn) { cloudBtn.disabled = true; cloudBtn.title = 'Disabled for current category'; }
+    } else if (cat === 'initiator') {
+      if (genStemBtn) { genStemBtn.disabled = false; genStemBtn.title = ''; }
+      if (genSunBtn) { genSunBtn.disabled = true; genSunBtn.title = 'Disabled for current category'; }
+      if (cloudBtn) { cloudBtn.disabled = true; cloudBtn.title = 'Disabled for current category'; }
+    } else if (cat === 'time_difference_hours') {
+      if (cloudBtn) { cloudBtn.disabled = false; cloudBtn.title = ''; }
+      if (genSunBtn) { genSunBtn.disabled = true; genSunBtn.title = 'Disabled for current category'; }
+      if (genStemBtn) { genStemBtn.disabled = true; genStemBtn.title = 'Disabled for current category'; }
+    } else {
+      // Unknown category (should not happen) -> disable all
+      if (genSunBtn) { genSunBtn.disabled = true; genSunBtn.title = 'Select "Time of day"'; }
+      if (genStemBtn) { genStemBtn.disabled = true; genStemBtn.title = 'Select "Initiator"'; }
+      if (cloudBtn) { cloudBtn.disabled = true; cloudBtn.title = 'Select "Time difference"'; }
     }
   }
   if (headerSelect) headerSelect.addEventListener('change', refreshButtonsByCategory);
@@ -137,6 +137,25 @@ function setupUI() {
         generateStem();
       } else {
         console.warn('generateStem is not available');
+      }
+    });
+  }
+  if (genCloudBtn) {
+    genCloudBtn.addEventListener('click', () => {
+      const startDateSelect = document.getElementById('start-date-select');
+      const endDateSelect = document.getElementById('end-date-select');
+      const sv = startDateSelect?.value;
+      const ev = endDateSelect?.value;
+      if (!sv || !ev) { alert('Please select both start and end dates'); return; }
+      const startDate = new Date(sv + 'T00:00:00');
+      const endDate = new Date(ev + 'T00:00:00');
+      if (isNaN(startDate) || isNaN(endDate) || startDate > endDate) { alert('Invalid date range'); return; }
+      const diffDays = Math.floor((endDate - startDate) / (1000*60*60*24));
+      if (diffDays > 62) { alert('Maximum date range is 2 months (≤62 days).'); return; }
+      if (typeof generateClouds === 'function') {
+        generateClouds(startDate, endDate);
+      } else {
+        console.warn('generateClouds is not available');
       }
     });
   }

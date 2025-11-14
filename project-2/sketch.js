@@ -20,6 +20,12 @@ let sunDragDX = 0;
 let sunDragDY = 0;
 // Stem visualization state
 let stems = []; // [{groupIndex, points:[{x,y}], leaves:[{t:number,size:number}]}]
+// Cloud visualization state
+let clouds = []; // [{timezone, avgTD, daysCount, cx, cy, points:[{dx,dy}], pickR, alpha}]
+let hoveredCloudIndex = -1;
+let draggingCloudIndex = -1;
+let cloudDragDX = 0;
+let cloudDragDY = 0;
 // Text overlay state
 let textItems = []; // {id, x, y, text, size, color, selected}
 let activeTextIndex = -1;
@@ -28,6 +34,8 @@ let textDragDY = 0;
 let isResizingText = false;
 let resizeStartMouse = {x:0,y:0};
 let resizeStartSize = 0;
+// Inline text input element (for adding new text directly on canvas)
+let activeTextInput = null; // DOM input element when adding text
 const TEXT_HANDLE_SIZE = 10;
 const TEXT_DELETE_W = 44;
 const TEXT_DELETE_H = 18;
@@ -53,6 +61,11 @@ const CORE_R_FACTOR = 0.18;         // central core radius as fraction of used f
 const ORBIT_INNER_FACTOR = 0.55;    // base orbit radius relative to used flower radius before adjustment
 // Allow some bleed when dragging so petals can cross the canvas edge slightly
 const DRAG_EDGE_BLEED = 16; // px
+// Shadow configuration
+const SHADOW_DX = 3;          // horizontal offset for petal/core shadow
+const SHADOW_DY = 2;          // vertical offset for petal/core shadow
+const SHADOW_ALPHA_CORE = 40; // opacity for core shadow (lighter)
+const SHADOW_ALPHA_PETAL = 28; // opacity for petal shadow (lighter)
 
 function preload() {
   callsTable = loadTable('data/dailyCalls_test.csv', 'csv', 'header');
@@ -68,10 +81,8 @@ function preload() {
 
 
 function setup() {
-  console.log('setup() called');
   let canvas = createCanvas(1125, 750);
   canvas.parent('canvas-panel');
-  console.log('Canvas created, parent:', canvas.elt.parentElement.id);
   randomSeed(12345);
 
   // Create a floating HTML tooltip overlay attached to <body>
@@ -131,6 +142,10 @@ function setup() {
       // clear sun state
       sunRays = [];
       sunConfig.active = false;
+      // clear clouds
+      clouds = [];
+      hoveredCloudIndex = -1;
+      draggingCloudIndex = -1;
       hoveredRectIndex = -1;
       hoveredRingIndex = -1;
       hoveredIsCore = false;
@@ -157,22 +172,10 @@ function setup() {
   const addTextBtn = (typeof document !== 'undefined') ? document.getElementById('add-text-btn') : null;
   if (addTextBtn) {
     addTextBtn.addEventListener('click', () => {
-      const userText = (typeof window !== 'undefined') ? window.prompt('Enter text to add:', '') : '';
-      if (userText && userText.trim()) {
-        const centerX = width * 0.5;
-        const centerY = height * 0.5;
-        textItems.push({
-          id: Date.now(),
-          x: centerX - 50,
-          y: centerY - 20,
-          text: userText.trim(),
-          size: 28,
-          color: '#111',
-          selected: false
-        });
-        isCleared = false;
-        redraw();
-      }
+      if (activeTextInput) return; // already open
+      const centerX = width * 0.5;
+      const centerY = height * 0.5;
+      createInlineTextInput(centerX - 80, centerY - 24);
     });
   }
 
@@ -194,6 +197,75 @@ function getDataDateBounds() {
     if (!maxDate || dt > maxDate) maxDate = dt;
   }
   return {minDate, maxDate};
+}
+
+// Create an inline input box for adding text directly on the canvas.
+function createInlineTextInput(x, y) {
+  if (typeof document === 'undefined') return;
+  const panel = document.getElementById('canvas-panel');
+  if (!panel) return;
+  // Convert canvas coordinates to page coordinates (panel is positioned relative)
+  const canvasEl = panel.querySelector('canvas');
+  if (!canvasEl) return;
+  const rect = canvasEl.getBoundingClientRect();
+  // page position
+  const pageX = rect.left + window.scrollX + x;
+  const pageY = rect.top + window.scrollY + y;
+
+  const input = document.createElement('input');
+  activeTextInput = input;
+  Object.assign(input.style, {
+    position: 'absolute',
+    left: pageX + 'px',
+    top: pageY + 'px',
+    width: '160px',
+    padding: '6px 8px',
+    fontSize: '20px',
+    fontFamily: 'Arial, sans-serif',
+    border: '1px solid #444',
+    borderRadius: '6px',
+    background: 'rgba(255,255,255,0.92)',
+    color: '#111',
+    zIndex: '10000'
+  });
+  input.placeholder = 'Type and Enter...';
+  panel.appendChild(input);
+  input.focus();
+
+  const commit = () => {
+    if (!activeTextInput) return;
+    const val = activeTextInput.value.trim();
+    const localX = x; // already in canvas coords
+    const localY = y;
+    activeTextInput.remove();
+    activeTextInput = null;
+    if (val) {
+      textItems.push({
+        id: Date.now(),
+        x: localX,
+        y: localY,
+        text: val,
+        size: 28,
+        color: '#111',
+        selected: false
+      });
+      isCleared = false;
+      redraw();
+    } else {
+      redraw();
+    }
+  };
+  const cancel = () => {
+    if (!activeTextInput) return;
+    activeTextInput.remove();
+    activeTextInput = null;
+    redraw();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', () => { commit(); });
 }
 
 // Regenerate flowers for a given date range; 5-day grouping with remainder
@@ -386,6 +458,10 @@ function draw() {
   if (stems.length) {
     drawStems();
   }
+  // Draw clouds (above stems, below flowers)
+  if (clouds.length) {
+    drawClouds();
+  }
  
   // draw flowers (petal layout)
   noStroke();
@@ -404,8 +480,12 @@ function draw() {
       continue;
     }
   // Draw central core (solid black per user request)
-  fill(0);
+  // Core shadow
   noStroke();
+  fill(0,0,0,SHADOW_ALPHA_CORE);
+  ellipse(f.cx + SHADOW_DX, f.cy + SHADOW_DY, f.coreR*2, f.coreR*2);
+  // Core
+  fill(0);
   ellipse(f.cx, f.cy, f.coreR*2, f.coreR*2);
     // Draw petals
     for (let p of (f.petals || [])) {
@@ -414,8 +494,12 @@ function draw() {
       const petalColor = lerpColor(moodCol, color(255), PETAL_SOFT_MIX);
       const px = f.cx + f.orbitR * Math.cos(p.angle);
       const py = f.cy + f.orbitR * Math.sin(p.angle);
-      fill(petalColor);
+      // Petal shadow
       noStroke();
+      fill(0,0,0,SHADOW_ALPHA_PETAL);
+      ellipse(px + SHADOW_DX, py + SHADOW_DY, p.petalR*2, p.petalR*2);
+      // Petal fill
+      fill(petalColor);
       ellipse(px, py, p.petalR*2, p.petalR*2);
     }
   }
@@ -496,6 +580,16 @@ function mouseMoved() {
   hoveredRectIndex = -1;
   hoveredRingIndex = -1;
   hoveredIsCore = false;
+  hoveredCloudIndex = -1;
+
+  // Cloud hover detection (approximate with bounding radius)
+  if (clouds.length) {
+    for (let i = 0; i < clouds.length; i++) {
+      const c = clouds[i];
+      const pr = c.pickR || 50;
+      if (dist(mouseX, mouseY, c.cx, c.cy) <= pr) { hoveredCloudIndex = i; break; }
+    }
+  }
   
   for (let i = 0; i < rects.length; i++) {
     let f = rects[i];
@@ -607,6 +701,21 @@ function mousePressed() {
     }
   }
 
+  // Cloud drag pick (after sun, before flowers)
+  if (clouds.length) {
+    for (let i = clouds.length - 1; i >= 0; i--) {
+      const c = clouds[i];
+      const pr = c.pickR || 50;
+      if (dist(mouseX, mouseY, c.cx, c.cy) <= pr) {
+        draggingCloudIndex = i;
+        cloudDragDX = c.cx - mouseX;
+        cloudDragDY = c.cy - mouseY;
+        if (tooltipEl) tooltipEl.style.display = 'none';
+        return;
+      }
+    }
+  }
+
   // pick topmost flower under mouse (iterate from end)
   for (let i = rects.length - 1; i >= 0; i--) {
     const f = rects[i];
@@ -661,12 +770,21 @@ function mouseDragged() {
     f.cy = constrain(mouseY + dragDY, pad, height - pad);
     return false;
   }
+
+  // Drag cloud if picked
+  if (draggingCloudIndex !== -1) {
+    const c = clouds[draggingCloudIndex];
+    c.cx = constrain(mouseX + cloudDragDX, 0, width);
+    c.cy = constrain(mouseY + cloudDragDY, 0, height);
+    return false;
+  }
 }
 
 function mouseReleased() {
   draggingIndex = -1;
   isResizingText = false;
   isDraggingSun = false;
+  draggingCloudIndex = -1;
   // recompute sun hover state on release
   if (sunConfig.active) {
     hoveredSun = (dist(mouseX, mouseY, sunConfig.cx, sunConfig.cy) <= sunConfig.radius && mouseY <= sunConfig.cy);
@@ -690,6 +808,25 @@ function displayTooltip() {
       <div><strong>Evening:</strong> ${esc(counts.evening)}</div>
       <div><strong>Night:</strong> ${esc(counts.night)}</div>
       ${counts.other ? `<div><strong>Other:</strong> ${esc(counts.other)}</div>` : ''}
+    `;
+    const rect = (this && this._renderer && this._renderer.elt) ? this._renderer.elt.getBoundingClientRect() : (document.querySelector('#canvas-panel canvas') || {getBoundingClientRect:()=>({left:0,top:0})}).getBoundingClientRect();
+    let pageX = rect.left + window.scrollX + mouseX + 15;
+    let pageY = rect.top + window.scrollY + mouseY - 10;
+    if (pageX < 4) pageX = 4;
+    if (pageY < 4) pageY = 4;
+    tooltipEl.style.left = pageX + 'px';
+    tooltipEl.style.top = pageY + 'px';
+    tooltipEl.style.display = 'block';
+    return;
+  }
+  // Cloud tooltip if not over a flower and a cloud is hovered
+  if ((hoveredRectIndex === -1 || (hoveredRingIndex === -1 && !hoveredIsCore)) && hoveredCloudIndex !== -1 && clouds[hoveredCloudIndex]) {
+    const c = clouds[hoveredCloudIndex];
+    const escC = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    tooltipEl.innerHTML = `
+      <div><strong>Timezone:</strong> ${escC(c.timezone)}</div>
+      <div><strong>Days:</strong> ${escC(c.daysCount)}</div>
+      <div><strong>Time Diff (max/avg):</strong> ${escC((c.maxTD||0).toFixed(1))} h / ${escC((c.avgTD||0).toFixed(2))} h</div>
     `;
     const rect = (this && this._renderer && this._renderer.elt) ? this._renderer.elt.getBoundingClientRect() : (document.querySelector('#canvas-panel canvas') || {getBoundingClientRect:()=>({left:0,top:0})}).getBoundingClientRect();
     let pageX = rect.left + window.scrollX + mouseX + 15;
@@ -1021,3 +1158,114 @@ function drawSun() {
     line(ax, ay, bx, by);
   }
 }
+
+// CLOUD VISUALIZATION FUNCTIONS
+function generateClouds(startDate, endDate) {
+  if (!callsTable) return;
+  clouds = [];
+  hoveredCloudIndex = -1;
+  const tzMap = {};
+  const daySetPerTZ = {};
+  for (let r = 0; r < callsTable.getRowCount(); r++) {
+    const ds = callsTable.getString(r, 'date');
+    if (!ds) continue;
+    const ps = ds.split('/');
+    if (ps.length < 3) continue;
+    const m = parseInt(ps[0],10);
+    const d = parseInt(ps[1],10);
+    const y = parseInt(ps[2],10);
+    const dt = new Date(y, m-1, d);
+    if (dt < startDate || dt > endDate) continue;
+    const tz = String(callsTable.getString(r, 'time_zone')||'Unknown').trim();
+    const td = parseFloat(String(callsTable.getString(r, 'time_difference_hours')||'0').trim());
+    if (!tzMap[tz]) tzMap[tz] = {sum:0,count:0,max:0};
+    const tdVal = isNaN(td)?0:td;
+    tzMap[tz].sum += tdVal;
+    tzMap[tz].count += 1;
+    tzMap[tz].max = Math.max(tzMap[tz].max, tdVal);
+    const dayKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (!daySetPerTZ[tz]) daySetPerTZ[tz] = new Set();
+    daySetPerTZ[tz].add(dayKey);
+  }
+  const tzKeys = Object.keys(tzMap);
+  if (!tzKeys.length) { isCleared = false; return; }
+  const topBandY = height * 0.18; // slightly lower for larger clouds
+  const spacingX = width / (tzKeys.length + 1);
+  for (let i = 0; i < tzKeys.length; i++) {
+    const tz = tzKeys[i];
+    const stats = tzMap[tz];
+    const avgTD = stats.count ? (stats.sum / stats.count) : 0; // used only for tooltip now
+    const maxTD = stats.max || 0;
+    const alpha = computeCloudAlpha(maxTD);
+    // Blob shape parameters independent of data (varied slightly per cloud only)
+    const baseR = 96 * random(0.95, 1.25); // overall size decoupled from data
+    const noiseAmp = 0.16 * random(0.9, 1.15); // puffiness
+    const noiseFreq = 1.2 * random(0.9, 1.1); // complexity
+    const cx = spacingX * (i+1);
+    const cy = topBandY + random(-18, 18);
+    // Sample outline points
+    const pts = [];
+    const steps = 140;
+    const stretchX = 1.6; // horizontal elongation for cloud
+    const flatBottom = 0.25; // bottom flatten factor
+    const seed = random(1000);
+    for (let s = 0; s < steps; s++) {
+      const ang = (s / steps) * TWO_PI;
+      const n = noise(Math.cos(ang) * noiseFreq + seed, Math.sin(ang) * noiseFreq + seed*0.37);
+      let r = baseR * (1 + (n - 0.5) * 2 * noiseAmp);
+      let dx = Math.cos(ang) * r * stretchX;
+      let dy = Math.sin(ang) * r;
+      // gently flatten the bottom hemisphere
+      if (dy > r * flatBottom) dy = lerp(dy, r * flatBottom, 0.6);
+      pts.push({dx, dy});
+    }
+    const pickR = baseR * 1.6; // generous pick radius for dragging/hover
+    clouds.push({timezone: tz, avgTD, maxTD, daysCount: (daySetPerTZ[tz]?.size)||0, cx, cy, points: pts, pickR, alpha});
+  }
+  isCleared = false;
+}
+
+// Map time difference (hours) to desired opacity points:
+// 0h->50%, 2h->70%, 3h->80%, 12h->100%
+function computeCloudAlpha(tdHours) {
+  const t = constrain(tdHours, 0, 12);
+  const stops = [
+    {h: 0,  o: 0.50},
+    {h: 2,  o: 0.70},
+    {h: 3,  o: 0.80},
+    {h: 12, o: 1.00}
+  ];
+  // exact match
+  for (let i = 0; i < stops.length; i++) {
+    if (abs(t - stops[i].h) < 1e-6) return Math.round(stops[i].o * 255);
+  }
+  // find segment
+  let prev = stops[0], next = stops[stops.length-1];
+  for (let i = 1; i < stops.length; i++) {
+    if (t < stops[i].h) { next = stops[i]; prev = stops[i-1]; break; }
+  }
+  const u = (t - prev.h) / (next.h - prev.h);
+  const op = lerp(prev.o, next.o, u);
+  return Math.round(op * 255);
+}
+
+function drawClouds() {
+  push();
+  noStroke();
+  for (let i = 0; i < clouds.length; i++) {
+    const c = clouds[i];
+    // Pure white cloud fill (no gradient tint)
+    fill(255,255,255,c.alpha);
+    if (c.points && c.points.length) {
+      beginShape();
+      vertex(c.cx + c.points[0].dx, c.cy + c.points[0].dy);
+      for (let k = 1; k < c.points.length; k++) {
+        const p = c.points[k];
+        vertex(c.cx + p.dx, c.cy + p.dy);
+      }
+      endShape(CLOSE);
+    }
+  }
+  pop();
+}
+
