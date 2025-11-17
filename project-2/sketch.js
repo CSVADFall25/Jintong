@@ -314,6 +314,8 @@ function updateFlowers(startDate, endDate) {
     groups.push(gdays);
   }
 
+  generateClouds(startDate, endDate);
+
   // Totals and placements
   const totals = groups.map(g => g.reduce((s, day) => s + day.entries.reduce((ss, e) => ss + e.duration, 0), 0));
   const maxTotal = max(totals.length ? totals : [1]);
@@ -772,15 +774,16 @@ function mouseDragged() {
   }
 
   // Drag cloud if picked
-  if (draggingCloudIndex !== -1) {
-    const c = clouds[draggingCloudIndex];
-    c.cx = constrain(mouseX + cloudDragDX, 0, width);
-    c.cy = constrain(mouseY + cloudDragDY, 0, height);
-    return false;
-  }
+    if (draggingCloudIndex !== -1) {
+      const c = clouds[draggingCloudIndex];
+      c.cx = constrain(mouseX + cloudDragDX, 0, width);
+      c.cy = constrain(mouseY + cloudDragDY, 0, height);
+      return false;
+    }
 }
 
 function mouseReleased() {
+  draggingCloudIndex = -1;
   draggingIndex = -1;
   isResizingText = false;
   isDraggingSun = false;
