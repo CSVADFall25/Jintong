@@ -125,7 +125,10 @@ function setup() {
   let initStart = minDate ? new Date(minDate) : new Date(2025, 6, 1);
   let initEnd = minDate ? new Date(minDate) : new Date(2025, 6, 1);
   if (minDate) { initEnd.setDate(initStart.getDate()+59); if (maxDate && initEnd > maxDate) initEnd = new Date(maxDate); }
-  updateFlowers(initStart, initEnd);
+  // 初始不生成云朵，只生成花朵
+  isCleared = false;
+  groups = [];
+  rects = [];
 
   // Initialize UI controls after data is ready
   if (typeof setupUI === 'function') setupUI();
@@ -314,7 +317,7 @@ function updateFlowers(startDate, endDate) {
     groups.push(gdays);
   }
 
-  generateClouds(startDate, endDate);
+  // generateClouds(startDate, endDate);
 
   // Totals and placements
   const totals = groups.map(g => g.reduce((s, day) => s + day.entries.reduce((ss, e) => ss + e.duration, 0), 0));
