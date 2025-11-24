@@ -6,15 +6,15 @@ I plan to create a real-time light-painting tool where users can “step into”
 
 The core idea is to treat light as both a drawing medium and a way of revealing spatial layers inside a flat image. As users move in space, their bodies navigate through depth layers, and their hands “paint” with light that interacts differently with each layer.
 
-## inpiration
+## Inspirations
 
-**1. Long-exposure light painting photography** 
+**1. Long-exposure Light Painting Photography** 
 
 Moving light sources leave trails, glows, and accumulated traces over time. This technique turns temporal motion into spatial marks, allowing light to behave like a drawing tool. I am inspired by how these long-exposure aesthetics turn motion into visible marks.
 
 <img src="https://www.jasper.travel/media/images/Mike_Gere_Photo_-_003.2e16d0ba.fill-1370x800.jpg" height=200 width=300>  <img src="https://shotkit.com/wp-content/uploads/2020/10/light-painting-featured.jpg" height=200 width=300>  <img src="https://images.squarespace-cdn.com/content/v1/53a2b3a1e4b0a5020bebe676/1613040664494-KSL9I0P5QW9FTHMA5LCY/light-painting-photography-ideas-and-tips-2.jpg" height=200 width=300>
 
-**2. 2D-to-3D depth reconstruction**
+**2. 2D-to-3D Depth Reconstruction**
 
 This technique infers depth from a single image allow a flat photo to unfold into layered space.
 
@@ -106,7 +106,7 @@ The tool should be:
 
 - Expressive: small changes in motion should produce different visual qualities.
 
-3. Aesthetics
+**3. Aesthetics**
 
 The visuals will be composed to reveal the image’s unfolded spatial layers.
 
