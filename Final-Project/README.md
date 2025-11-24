@@ -14,12 +14,11 @@ Moving light sources leave trails, glows, and accumulated traces over time. This
 
 <img src="https://www.jasper.travel/media/images/Mike_Gere_Photo_-_003.2e16d0ba.fill-1370x800.jpg" height=200 width=300>  <img src="https://shotkit.com/wp-content/uploads/2020/10/light-painting-featured.jpg" height=200 width=300>  <img src="https://images.squarespace-cdn.com/content/v1/53a2b3a1e4b0a5020bebe676/1613040664494-KSL9I0P5QW9FTHMA5LCY/light-painting-photography-ideas-and-tips-2.jpg" height=200 width=300>
 
-
 **2. 2D-to-3D depth reconstruction**
 
 This technique infers depth from a single image allow a flat photo to unfold into layered space.
 
-<img src="https://miro.medium.com/v2/resize:fit:1400/1*8qbMneRHrz6dSGhARoBZzw.png" height=200 width=400>  <img src="https://admin.itsnicethat.com/images/qH-p9fHqBm1ASY6I2lcBnvbu2Sg=/267801/format-webp%7Cwidth-1440/Eulogy_Still_4.png" height=200 width=400>
+<img src="https://miro.medium.com/v2/resize:fit:1400/1*8qbMneRHrz6dSGhARoBZzw.png" height=200 width=400>  
 
 ## Technical Considerations
 
