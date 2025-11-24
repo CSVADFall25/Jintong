@@ -12,7 +12,7 @@ The core idea is to treat light as both a drawing medium and a way of revealing 
 
 Moving light sources leave trails, glows, and accumulated traces over time. This technique turns temporal motion into spatial marks, allowing light to behave like a drawing tool. I am inspired by how these long-exposure aesthetics turn motion into visible marks.
 
-<img src="https://www.jasper.travel/media/images/Mike_Gere_Photo_-_003.2e16d0ba.fill-1370x800.jpg" height=200 width=300>  <img src="https://shotkit.com/wp-content/uploads/2020/10/light-painting-featured.jpg" height=200 width=300>  <img src="https://images.squarespace-cdn.com/content/v1/53a2b3a1e4b0a5020bebe676/1613040664494-KSL9I0P5QW9FTHMA5LCY/light-painting-photography-ideas-and-tips-2.jpg" height=200 width=300>
+<img src="https://thumbs.dreamstime.com/b/unique-creative-light-painting-fire-tube-lighting-creative-light-painting-fire-tube-lighting-116036292.jpg" height=200 width=300>  <img src="https://shotkit.com/wp-content/uploads/2020/10/light-painting-featured.jpg" height=200 width=300>  <img src="https://images.squarespace-cdn.com/content/v1/53a2b3a1e4b0a5020bebe676/1613040664494-KSL9I0P5QW9FTHMA5LCY/light-painting-photography-ideas-and-tips-2.jpg" height=200 width=300>
 
 **2. 2D-to-3D Depth Reconstruction**
 
@@ -112,7 +112,7 @@ The visuals will be composed to reveal the image’s unfolded spatial layers.
 
 Each depth layer can have distinct light behavior (e.g., sharp trails in foreground, hazy glows in background).
 
-## Successful result
+## Successful Result
 
 A successful outcome will be a real-time interactive installation where:
 
